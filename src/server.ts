@@ -29,7 +29,49 @@ import {re_weburl} from './util/re_weburl'
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
-  app.get("/filteredimage", async (req, res) => {
+ 
+  app.get('/filteredimage', async (req, res, next) => {
+    const {image_url} = req.query;
+    console.log(image_url)
+    
+    // 1. validate the image_url query
+    if (!image_url) {
+      return res.status(400).send({
+        message: "The image url is required. Please add query 'image_url=' after '?'"
+      });
+    }   
+    
+    if (!re_weburl.test(image_url)) {
+        return res.status(400).send(`The url is malformed. image_url= ${image_url}`);
+    }
+      
+    // 2. call filterImageFromURL(image_url) to filter the image    
+    // wait for the array of results
+    let filteredImage= await filterImageFromURL(image_url)
+
+    if (!filteredImage) {
+      return res.status(400).send(`Error fetching image. Image not available.May be is not public available`);
+    }
+    //    3. send the resulting file in the response
+    res.status(200)
+        .sendFile(filteredImage, function (err) {
+          if (err) {
+            next(err);
+          } else {
+            //    4. deletes any files on the server on finish of the response
+            try {
+              console.log(`removing " ${filteredImage}"`)
+              deleteLocalFiles([filteredImage])
+            } catch(e) {
+              console.log(`error removing " ${filteredImage}"`); 
+            }
+          }
+        });       
+
+  })
+
+/*
+  app.get("/filteredimage", asyncMiddleware, (req, res) => {
     
     const {image_url} = req.query;
     console.log(image_url)
@@ -45,19 +87,19 @@ import {re_weburl} from './util/re_weburl'
         return res.status(400).send(`The url is malformed. image_url= ${image_url}`);
     }
 
-    try {
+    
     // 2. call filterImageFromURL(image_url) to filter the image    
-      const filteredImageFromURL = await filterImageFromURL(image_url);
+    const filteredImage = await filterImageFromURL(image_url)
     // 3. Send the resulting file in the response and 
     // 4. Deletes any files on the server on finish of the response  
-      res.sendFile(filteredImageFromURL, () =>
-        deleteLocalFiles([filteredImageFromURL])
+      res.sendFile(filteredImage, () =>
+        deleteLocalFiles([filteredImage])
       );
-    } catch (error) {
-      res.sendStatus(422).send("Unable to process image at the provided url");
-    }
+ 
+    
+    
   });
-
+*/
   //! END @TODO1
   
   // Root Endpoint
