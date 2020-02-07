@@ -25,3 +25,6 @@ http://uifm-dev3.us-east-1.elasticbeanstalk.com/filteredimage?image_url=https://
 
 https://github.com/angelvinyals/Udagram-Image-Filtering-Microservice.git
 
+### Adding Authentication
+
+F-auth is the branch created for adding authentication.
